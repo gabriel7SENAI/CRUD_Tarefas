@@ -4,52 +4,71 @@ const tarefaInput = document.getElementById("tarefaInput");
 const btnAdicionar = document.getElementById("btnAdicionar");
 const listaTarefas = document.getElementById("listaTarefas");
 
-// Adicionar tarefa
 btnAdicionar.addEventListener("click", async () => {
-  const texto = tarefaInput.value.trim();
-  if (!texto) return alert("Digite uma tarefa");
+  const texto = tarefaInput.value;
 
-  await adicionarDado("tarefas", { titulo: texto, feita: false });
+  if (texto === "") {
+    alert("Digite uma tarefa");
+    return;
+  }
+
+  await adicionarDado("tarefas", {
+    titulo: texto,
+    feita: false,
+  });
 
   tarefaInput.value = "";
   mostrarTarefas();
 });
 
-// Mostrar tarefas (Read)
 async function mostrarTarefas() {
   const tarefas = await lerDados("tarefas");
-  listaTarefas.innerHTML = "";
 
+  listaTarefas.innerHTML = "";
   if (!tarefas) return;
 
-  for (const key in tarefas) {
-    const tarefa = tarefas[key];
+  for (const id in tarefas) {
+    const tarefa = tarefas[id];
 
     const li = document.createElement("li");
-    li.className = tarefa.feita ? "feita" : "";
-    li.textContent = tarefa.titulo + (tarefa.feita ? " ✅" : "");
 
-    // Botão marcar como feita/pendente (Update)
-    const btnAtualizar = document.createElement("button");
-    btnAtualizar.textContent = tarefa.feita ? "Desmarcar" : "Marcar";
-    btnAtualizar.onclick = () => {
-      atualizarDado(`tarefas/${key}`, { feita: !tarefa.feita });
+    // Texto
+    if (tarefa.feita) {
+      li.textContent = tarefa.titulo + " (feita)";
+    } else {
+      li.textContent = tarefa.titulo;
+    }
+
+    // Botão marcar / desmarcar
+    const btnMarcar = document.createElement("button");
+
+    if (tarefa.feita) {
+      btnMarcar.textContent = "Desmarcar";
+    } else {
+      btnMarcar.textContent = "Marcar";
+    }
+
+    btnMarcar.addEventListener("click", async () => {
+      await atualizarDado("tarefas/" + id, {
+        feita: !tarefa.feita,
+      });
+
       mostrarTarefas();
-    };
+    });
 
-    // Botão deletar (Delete)
+    // Botão deletar
     const btnDeletar = document.createElement("button");
     btnDeletar.textContent = "Deletar";
-    btnDeletar.onclick = () => {
-      deletarDado(`tarefas/${key}`);
-      mostrarTarefas();
-    };
 
-    li.appendChild(btnAtualizar);
+    btnDeletar.addEventListener("click", async () => {
+      await deletarDado("tarefas/" + id);
+      mostrarTarefas();
+    });
+
+    li.appendChild(btnMarcar);
     li.appendChild(btnDeletar);
     listaTarefas.appendChild(li);
   }
 }
 
-// Inicializa lista
 mostrarTarefas();
